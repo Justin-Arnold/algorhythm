@@ -90,8 +90,7 @@
         
         <div class="mt-auto">
           <button 
-            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded mb-2 flex items-center justify-center"
-        
+            class="btn btn-primary w-full mb-4"
             id="play-toggle"
           >
             <span v-if="isPlaying">
@@ -356,6 +355,6 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style>
 /* You can add any specific component styles here */
 </style>
