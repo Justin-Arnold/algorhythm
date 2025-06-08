@@ -64,21 +64,21 @@ export default class ArpeggioPlayer {
         this.container = document.querySelector(params.container_selector);
         this.aside = document.querySelector(params.aside_selector);
         this.play_toggle = document.querySelector(params.play_toggle_selector) as HTMLButtonElement || null;
-        this.chords = [0,2,6,3,4,2,5,1];
-        this.ms_key = 'G';
-        this.ms_mode = Mode.LOCRIAN;
+        this.chords = [1,2,4,0,3,6,0,2];
+        this.ms_key = 'B'
+        this.ms_mode = Mode.MINOR
         this.ap_steps = 6;
-        this.ap_pattern_type = 'straight'; // || 'looped'
+        this.ap_pattern_type = 'hotelcalifornia'; // || 'looped' || 'straight'
         this.ap_pattern_id = 0;
         this.player = {
             chord_step: 0,
             octave_base: 4,
-            arp_repeat: 2,
+            arp_repeat: 1,
             bass_on: false,
             triad_step: 0,
             step: 0,
             playing: false,
-            bpm: 135
+            bpm: 75
         };
         this.chord_count = this.chords.length;
         this.setMusicalScale();
@@ -124,32 +124,32 @@ export default class ArpeggioPlayer {
         this.fx = {
             distortion: new Tone.Distortion(0.8),
             reverb: new Tone.Freeverb(0.1, 3000),
-            delay: new Tone.PingPongDelay('16n', 0.1),
+            delay: new Tone.PingPongDelay('8n', 0.1),
         };
         this.synths = {
             treb: new Tone.PolySynth(Tone.Synth, {
                 oscillator: {
-                    type: 'sine'
+                    type:  'triangle4',
                 },
                 envelope: {
-                    attack: 0.05,
-                    decay: 0.1,
-                    sustain: 0.5,
-                    release: 0.5
+                    attack: 0.005,
+                    decay: 0.2,
+                    sustain: 0.4,
+                    release: 2.0
                 }
             }),  
             bass: new Tone.DuoSynth()
         };
         this.synths.bass.vibratoAmount.value = 0.1;
         this.synths.bass.harmonicity.value = 1.5;
-        this.synths.bass.voice0.oscillator.type = 'triangle';
+        this.synths.bass.voice0.oscillator.type = 'sawtooth'
         this.synths.bass.voice0.envelope.attack = 0.05;
-        this.synths.bass.voice1.oscillator.type = 'triangle';
+        this.synths.bass.voice1.oscillator.type = 'sawtooth';
         this.synths.bass.voice1.envelope.attack = 0.05;
         // fx mixes
-        this.fx.distortion.wet.value = 0.2;
-        this.fx.reverb.wet.value = 0.2;
-        this.fx.delay.wet.value = 0.3;
+        this.fx.distortion.wet.value = 0.0;
+        this.fx.reverb.wet.value = 0.3;
+        this.fx.delay.wet.value = 0.1;
         // gain levels
         this.channel.master.toMaster();
         this.channel.treb.connect(this.channel.master);
@@ -236,8 +236,8 @@ export default class ArpeggioPlayer {
             let note_ref = `${note.note}${note.rel_octave + this.player.octave_base}`;
             
             // this._utilActiveNoteClassToggle([note_ref.replace('#', 'is')], 'active-t');
-            this.synths?.treb.triggerAttackRelease(note_ref, '16n', time);
-        }, '16n');
+            this.synths?.treb.triggerAttackRelease(note_ref, '8n', time);
+        }, '8n');
     };
     
     // private drawKeyboard() {

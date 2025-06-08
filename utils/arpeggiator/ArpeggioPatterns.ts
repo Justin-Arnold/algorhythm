@@ -1,10 +1,11 @@
 import type { ArpeggioParams } from "./types";
 
-export type PatternType = 'straight' | 'looped';
+export type PatternType = 'straight' | 'looped' | 'hotelcalifornia';
 
 type Patterns = {
     straight: number[][];
     looped: number[][];
+    hotelcalifornia: number[][];
 };
 
 
@@ -12,7 +13,7 @@ type Patterns = {
 export default class {
     amount_of_steps: number;
     arr: number[] = [];
-    patterns: Patterns = { straight: [], looped: [] };
+    patterns: Patterns = { straight: [], looped: [], hotelcalifornia: [] };
     permutations: number[][] = [];
     looped: number[][] = [];
     steps: number = 0;
@@ -40,7 +41,8 @@ export default class {
         this.looped = this.loop();
         this.patterns = {
             straight: this.permutations,
-            looped: this.looped
+            looped: this.looped,
+            hotelcalifornia: [[0, 3, 2, 3, 1, 3, 2, 3, 0, 3, 1, 3, 2, 3, 1, 3]]
         };
     };
     
