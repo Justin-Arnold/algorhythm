@@ -32,9 +32,9 @@
     </header>
     
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden p-4 space-x-4">
       <!-- Left Panel - Controls -->
-      <div class="w-full md:w-64 bg-gray-800 p-4 flex flex-col">
+      <!-- <div class="w-full md:w-64 bg-gray-800 p-4 flex flex-col">
         <div class="mb-6">
           <label class="block text-sm font-medium mb-2">Algorithm</label>
           <select 
@@ -111,10 +111,10 @@
             New Data
           </button>
         </div>
-      </div>
-      
+      </div> -->
+      <ArpeggiatorPanel />
       <!-- Main Visualization Area -->
-      <div class="flex-1 p-4 overflow-hidden flex flex-col">
+      <div class="flex-1 overflow-hidden flex flex-col">
         <!-- Visualization Canvas -->
         <div class="flex-1 bg-gray-800 rounded-lg overflow-hidden flex justify-center items-center mb-4 relative">
           <!-- Canvas for visualization -->
@@ -220,8 +220,6 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import * as Tone from "tone";
-import arpeggiator from './utils/arpeggiator';
 
 // import { 
 //   Play as IconPlay, 
@@ -340,18 +338,8 @@ watch(dataSize, () => {
   regenerateData();
 });
 
-let synth;
-let player;
-
 onMounted(() => {
   regenerateData();
-  synth = new Tone.Synth().toDestination();
-  player = new arpeggiator.ArpeggioPlayer({
-    container_selector: '#main',
-    aside_selector: '#aside',
-    play_toggle_selector: '#play-toggle',
-  })
-
 });
 </script>
 
