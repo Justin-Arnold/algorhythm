@@ -91,7 +91,8 @@
         <div class="mt-auto">
           <button 
             class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded mb-2 flex items-center justify-center"
-            @click="togglePlayback"
+        
+            id="play-toggle"
           >
             <span v-if="isPlaying">
               <IconPause class="mr-2" :size="18" />
@@ -220,6 +221,9 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
+import * as Tone from "tone";
+import arpeggiator from './utils/arpeggiator';
+
 // import { 
 //   Play as IconPlay, 
 //   Pause as IconPause, 
@@ -326,6 +330,7 @@ const togglePlayback = () => {
     // In a real implementation, this would start the algorithm execution
     // and sonification process
     console.log('Starting algorithm playback');
+    synth.triggerAttackRelease("C4", "8n");
   } else {
     console.log('Pausing algorithm playback');
   }
@@ -336,22 +341,18 @@ watch(dataSize, () => {
   regenerateData();
 });
 
-// Initialize component
+let synth;
+let player;
+
 onMounted(() => {
   regenerateData();
-  
-  // Here you would initialize p5.js or another visualization library
-  // with the visualizationCanvas.value element
-  
-  // Example: initializing audio context
-  // This would be replaced with proper Tone.js initialization
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const audioContext = new AudioContext();
-    console.log('Audio context initialized');
-  } catch (e) {
-    console.error('Web Audio API is not supported in this browser');
-  }
+  synth = new Tone.Synth().toDestination();
+  player = new arpeggiator.ArpeggioPlayer({
+    container_selector: '#main',
+    aside_selector: '#aside',
+    play_toggle_selector: '#play-toggle',
+  })
+
 });
 </script>
 
