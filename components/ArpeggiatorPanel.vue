@@ -140,7 +140,6 @@ watch(arpType, (newArpType) => {
             
             <button 
                 class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded flex items-center justify-center"
-                @click="regenerateData"
             >
                 <!-- <IconRefreshCw class="mr-2" :size="18" /> -->
                 New Data
