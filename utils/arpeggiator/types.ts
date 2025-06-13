@@ -19,7 +19,7 @@ export type Scale = {
     triads: string[]
 }
 
-export const Keys = ['A','A#','B','C','C#','D','D#','E','F','F#','G','G#','A','A#','B'] as const;
+export const Keys = ['A','A#','B','C','C#','D','D#','E','F','F#','G','G#'] as const;
 export type Key = typeof Keys[number];
 
 export enum Step {

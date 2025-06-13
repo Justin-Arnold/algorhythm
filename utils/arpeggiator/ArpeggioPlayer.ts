@@ -52,13 +52,14 @@ export default class ArpeggioPlayer {
     musicalScale?: MusicalScale;
     arpeggioPatterns?: ArpeggioPatterns;
     arpeggio: number[] = [];
-    msUpdateKey?: (e: Event) => void;
+    msUpdateKey?: (newKey: Key) => void;
     msUpdateScale?: () => void;
-    msUpdateMode?: (e: Event) => void;
+    msUpdateMode?: (newMode: Mode) => void;
     apUpdateSteps?: (e: Event) => void;
-    apUpdatePatternType?: (e: Event) => void;
+    apUpdatePatternType?: (newArpeggioType: 'straight' | 'looped') => void;
     apUpdatePatternId?: (e: Event) => void;
     apUpdate?: () => void;
+    playerUpdateBPM?: (newBeatsPerMinute: number) => void;
 
     constructor(params: PlayerParams) {
         this.container = document.querySelector(params.container_selector);
@@ -68,7 +69,7 @@ export default class ArpeggioPlayer {
         this.ms_key = 'B'
         this.ms_mode = Mode.MINOR
         this.ap_steps = 6;
-        this.ap_pattern_type = 'hotelcalifornia'; // || 'looped' || 'straight'
+        this.ap_pattern_type = 'straight'; // || 'looped' || 'straight'
         this.ap_pattern_id = 0;
         this.player = {
             chord_step: 0,
@@ -160,13 +161,10 @@ export default class ArpeggioPlayer {
     };
     
     private loadTransport() {
-        //   this.playerUpdateBPM = (e) => {
-        //     let el = e.target;
-        //     let bpm = el.getAttribute('data-value');
-        //     this.player.bpm = parseInt(bpm);
-        //     Tone.Transport.bpm.value = this.player.bpm;
-        //     this._utilClassToggle(e.target, 'bpm-current');
-        //   };
+        this.playerUpdateBPM = (newBeatsPerMinute: number) => {
+            this.player.bpm = newBeatsPerMinute;
+            Tone.getTransport().bpm.value = this.player.bpm;
+        };
         this.playerToggle = () => {
             if (!this.channel) return
             if(this.player.playing) {
@@ -191,23 +189,15 @@ export default class ArpeggioPlayer {
         Tone.getTransport().bpm.value = this.player.bpm;
         Tone.getTransport().scheduleRepeat((time) => {
             let curr_chord = this.player.chord_step % this.chord_count;
-            
-            let prev = document.querySelector('.chord > div.active');
-            if(prev) prev.classList.remove('active');
-            let curr = document.querySelector(`.chord > div:nth-of-type(${curr_chord + 1})`);
-            if(curr) curr.classList.add('active');
+            console.log(`Playing chord ${curr_chord} at step ${this.player.step}`);
     
             let chord = this.musicalScale?.notes[this.chords[curr_chord]];
             if (!chord) return;
             // finding the current note
             let notes = chord.triad.notes;
             for(let i = 0; i < Math.ceil(this.ap_steps / 3); i++) {
-            notes = notes.concat(notes.map((n) => { return { note: n.note, rel_octave: n.rel_octave + (i + 1)}}));
+                notes = notes.concat(notes.map((n) => { return { note: n.note, rel_octave: n.rel_octave + (i + 1)}}));
             }
-            console.log('Notes:', notes);
-            console.log('Arpeggio:', this.arpeggio);
-            console.log('step', this.player.step)
-            console.log('length', this.arpeggio.length);
             let note = notes[this.arpeggio[this.player.step % this.arpeggio.length]];
     
             // setting bass notes
@@ -232,7 +222,6 @@ export default class ArpeggioPlayer {
                 this.player.triad_step++;
             }
             // arpin'
-            console.log('Arpeggio step:', note);
             let note_ref = `${note.note}${note.rel_octave + this.player.octave_base}`;
             
             // this._utilActiveNoteClassToggle([note_ref.replace('#', 'is')], 'active-t');
@@ -304,14 +293,14 @@ export default class ArpeggioPlayer {
     //     title.innerHTML = 'Chord Progression';
     //     this.chord_container.appendChild(title);
         
-    //     this.msUpdateChords = (e) => {
-    //         let el = e.target;
-    //         let chord = el.getAttribute('data-chord');
-    //         let value = el.getAttribute('data-value');
-    //         this.chords[parseInt(chord)] = value;
-    //         this._utilClassToggle(e.target, `chord-${chord}-current`);
-    //         this._updateOutput();
-    //     };
+        // this.msUpdateChords = (e) => {
+        //     let el = e.target;
+        //     let chord = el.getAttribute('data-chord');
+        //     let value = el.getAttribute('data-value');
+        //     this.chords[parseInt(chord)] = value;
+        //     this._utilClassToggle(e.target, `chord-${chord}-current`);
+        //     this._updateOutput();
+        // };
         
     //     for(let c = 0; c < this.chord_count; c++) {
     //         let chord_el = document.createElement('div');
@@ -330,14 +319,14 @@ export default class ArpeggioPlayer {
     // //   this._updateChords();
     // };
     
-    // private updateChords() {
-    //   this.musicalScale?.notes.forEach((note, i) => {
-    //     let updates = document.querySelectorAll(`.chord div > div:nth-child(${i + 1})`);
-    //     for(let u = 0; u < updates.length; u++) {
-    //       updates[u].innerHTML = note.triad.interval;
-    //     }
-    //   });
-    // };
+        // private updateChords() {
+        //     this.musicalScale?.notes.forEach((note, i) => {
+        //         let updates = document.querySelectorAll(`.chord div > div:nth-child(${i + 1})`);
+        //         for(let u = 0; u < updates.length; u++) {
+        //         updates[u].innerHTML = note.triad.interval;
+        //         }
+        //     });
+        // };
     
     // _loadKeySelector() {
     //   let key_container = document.createElement('section');
@@ -469,15 +458,15 @@ export default class ArpeggioPlayer {
             key: this.ms_key,
             mode: this.ms_mode
         });
-        this.msUpdateKey = (e) => {
-            // this._utilClassToggle(e.target, 'key-current');
-            // this.ms_key = (e.target as HTMLElement).getAttribute('data-value'); 
-            // this.msUpdateScale(); 
+        this.msUpdateKey = (newKey: Key) => {
+            this.ms_key = newKey;
+            if (!this.msUpdateScale) return;
+            this.msUpdateScale(); 
         };
-        this.msUpdateMode = (e) => {
-            // this._utilClassToggle(e.target, 'mode-current');
-            // this.ms_mode = e.target.getAttribute('data-value');
-            // this.msUpdateScale();
+        this.msUpdateMode = (newMode: Mode) => {
+            this.ms_mode = newMode;
+            if (!this.msUpdateScale) return;
+            this.msUpdateScale();
             // this.updateChords();
         };
         this.msUpdateScale = () => { 
@@ -499,7 +488,11 @@ export default class ArpeggioPlayer {
             // this.apUpdate(); 
             // this._updatePatternSelector();
         };
-        this.apUpdatePatternType = (e) => { 
+        this.apUpdatePatternType = (newArpeggioType) => {
+            if (!this.arpeggioPatterns) return;
+            this.ap_pattern_type = newArpeggioType;
+            if (!this.apUpdate) return;
+            this.apUpdate()
             // this._utilClassToggle(e.target, 'type-current');
             // this.ap_pattern_type = e.target.getAttribute('data-value'); 
             // this.apUpdate(); 

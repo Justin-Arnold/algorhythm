@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import * as Tone from "tone";
 import ArpeggioPlayer from '../utils/arpeggiator';
+import { Keys, Mode, type Key } from "~/utils/arpeggiator/types";
 
 let synth: Tone.Synth;
 let player: ArpeggioPlayer;
@@ -21,12 +22,38 @@ const isPlaying = computed(() => {
 const algorithm = ref('bubbleSort');
 const soundTheme = ref('electronic');
 
+const beatsPerMinute = ref(75);
+
+const mode = ref<Mode>(Mode.MINOR);
+const key = ref<Key>('B');
+const arpType = ref<'straight' | 'looped'>('straight');
+
+watch(beatsPerMinute, (newBPM) => {
+    if (!player.playerUpdateBPM) return
+    player.playerUpdateBPM(newBPM);
+});
+
+watch(mode, (newMode) => {
+    if (!player.msUpdateMode) return
+    player.msUpdateMode(newMode);
+});
+
+watch(key, (newKey) => {
+    if (!player.msUpdateKey) return
+    player.msUpdateKey(newKey);
+});
+
+watch(arpType, (newArpType) => {
+    if (!player.apUpdatePatternType) return
+    player.apUpdatePatternType(newArpType);
+});
+
 </script>
 
 <template>
     <div class="bg-base-100 rounded-box p-4 md:w-64">
         <div class="mb-6">
-            <label class="block text-sm font-medium mb-2">Algorithm</label>
+            <label class="label mb-2">Algorithm</label>
             <select 
                 class="w-full bg-gray-700 rounded p-2 text-white border border-gray-600"
                 v-model="algorithm"
@@ -41,7 +68,7 @@ const soundTheme = ref('electronic');
             </select>
         </div>
         <div class="mb-6">
-            <label class="block text-sm font-medium mb-2">Sound Theme</label>
+            <label class="label mb-2">Sound Theme</label>
             <select 
                 class="w-full bg-gray-700 rounded p-2 text-white border border-gray-600"
                 v-model="soundTheme"
@@ -50,8 +77,51 @@ const soundTheme = ref('electronic');
                 <option value="orchestral">Orchestral</option>
                 <option value="minimalist">Minimalist</option>
                 <option value="8bit">8-Bit</option>
-                <option v-if="activeTab === 'create'" value="custom">My Custom Theme</option>
+                <!-- <option v-if="activeTab === 'create'" value="custom">My Custom Theme</option> -->
             </select>
+        </div>
+        <div class="mb-6">
+            <label class="label mb-2">Arpeggio Type</label>
+            <div class="flex  gap-4">
+                <div class="flex items-center gap-2">
+                    <input type="radio" v-model="arpType" value="straight" class="radio radio-primary" />
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Straight</span>
+                    </label>    
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="radio" v-model="arpType" value="looped" class="radio radio-primary" />
+                    <label class="label cursor-pointer">
+                        <span class="label-text">Looped</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="mb-6">
+            <label class="label mb-2">Key</label>
+            <select v-model="key" class="select select-primary">
+                <option v-for="key in Keys" :value="key">{{key}}</option>
+            </select>
+        </div>
+        <div class="mb-6">
+            <label class="label mb-2">Mode</label>
+            <select v-model="mode" class="select select-primary">
+                <option :value="Mode.MINOR">Minor</option>
+                <option :value="Mode.MAJOR">Major</option>
+                <option :value="Mode.IONIAN">Ionian</option>
+                <option :value="Mode.DORIAN">Dorian</option>
+                <option :value="Mode.PHRYGIAN">Phrygian</option>
+                <option :value="Mode.LYDIAN">Lydian</option>
+                <option :value="Mode.MIXOLYDIAN">Mixolydian</option>
+                <option :value="Mode.AEOLIAN">Aeolian</option>
+                <option :value="Mode.LOCRIAN">Locrian</option>
+                <option :value="Mode.MELODIC">Melodic</option>
+                <option :value="Mode.HARMONIC">Harmonic</option>
+            </select>
+        </div>
+        <div class="mb-6">
+            <label class="label mb-2">{{ beatsPerMinute }} BPM</label>
+            <input type="range" min="60" max="160" v-model="beatsPerMinute" class="range range-primary" />
         </div>
         <div class="mt-auto">
             <button 
@@ -59,11 +129,11 @@ const soundTheme = ref('electronic');
                 @click="player.playerToggle"
             >
                 <span v-if="isPlaying">
-                <IconPause class="mr-2" :size="18" />
+                <!-- <IconPause class="mr-2" :size="18" /> -->
                 Pause
                 </span>
                 <span v-else>
-                <IconPlay class="mr-2" :size="18" />
+                <!-- <IconPlay class="mr-2" :size="18" /> -->
                 Play
                 </span>
             </button>
@@ -72,7 +142,7 @@ const soundTheme = ref('electronic');
                 class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded flex items-center justify-center"
                 @click="regenerateData"
             >
-                <IconRefreshCw class="mr-2" :size="18" />
+                <!-- <IconRefreshCw class="mr-2" :size="18" /> -->
                 New Data
             </button>
         </div>

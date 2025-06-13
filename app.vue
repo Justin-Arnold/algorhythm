@@ -137,10 +137,10 @@
           
           <div v-if="activeTab === 'create'" class="absolute top-4 right-4 flex">
             <button class="bg-indigo-600 p-2 rounded-full shadow-lg mr-2">
-              <IconSave :size="20" />
+              <!-- <IconSave :size="20" /> -->
             </button>
             <button class="bg-pink-600 p-2 rounded-full shadow-lg">
-              <IconMusic :size="20" />
+              <!-- <IconMusic :size="20" /> -->
             </button>
           </div>
         </div>
@@ -153,7 +153,7 @@
               :class="{'bg-gray-600': editorTab === 'algorithm'}"
               @click="editorTab = 'algorithm'"
             >
-              <IconCode class="mr-2" :size="16" />
+              <!-- <IconCode class="mr-2" :size="16" /> -->
               Algorithm
             </button>
             <button 
@@ -161,7 +161,7 @@
               :class="{'bg-gray-600': editorTab === 'sound'}"
               @click="editorTab = 'sound'"
             >
-              <IconMusic class="mr-2" :size="16" />
+              <!-- <IconMusic class="mr-2" :size="16" /> -->
               Sound Mapping
             </button>
           </div>
@@ -318,21 +318,6 @@ const regenerateData = () => {
   );
   isPlaying.value = false;
 };
-
-// Toggle playback
-const togglePlayback = () => {
-  isPlaying.value = !isPlaying.value;
-  
-  if (isPlaying.value) {
-    // In a real implementation, this would start the algorithm execution
-    // and sonification process
-    console.log('Starting algorithm playback');
-    synth.triggerAttackRelease("C4", "8n");
-  } else {
-    console.log('Pausing algorithm playback');
-  }
-};
-
 // Watch for data size changes
 watch(dataSize, () => {
   regenerateData();

@@ -20,6 +20,7 @@ export default class MusicalScale {
     private loadScale(params: ScaleParams): void {
         this.key = params.key;
         this.mode = params.mode;
+        this.notes = [];
         this.scale = this.dict.scales[this.mode];
         // notes to cycle through
         let keys = this.dict.keys;
@@ -31,7 +32,6 @@ export default class MusicalScale {
             // relative octave. 0 = same as root, 1 = next ocave up
             let rel_octave = (offset + step) > keys.length - 1 ? 1 : 0;
             // generate the relative triads
-            console.log('Generating triad for step:', s, 'with triads:', this.scale.triads);
             let triad = this.genTriad(s, idx, rel_octave, this.scale.triads[s]);
             // define the note
             let note: Note = { step: s, note: keys[idx], rel_octave: rel_octave, triad: triad };
@@ -41,6 +41,7 @@ export default class MusicalScale {
     };
 
     pubUpdateScale(params: ScaleParams) {
+        console.log('Updating scale with params:', params);
         this.loadScale(params);
     };
 
