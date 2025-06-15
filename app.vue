@@ -112,7 +112,7 @@
           </button>
         </div>
       </div> -->
-      <ArpeggiatorPanel />
+      <ArpeggiatorPanel ref="arpeggiatorPanel" :data="arrayData" @start-sorting="startSorting" />
       <!-- Main Visualization Area -->
       <div class="flex-1 overflow-hidden flex flex-col">
         <!-- Visualization Canvas -->
@@ -125,10 +125,10 @@
                 <div 
                   v-for="(value, index) in arrayData" 
                   :key="index"
-                  class="w-2 md:w-4 rounded-t"
+                  class="w-2 md:w-4 rounded-t transition-all duration-300"
                   :style="{ 
                     height: `${value}%`,
-                    backgroundColor: isPlaying && index % 3 === 0 ? '#ec4899' : '#6366f1'
+                    backgroundColor: getBarColor(index, value)
                   }"
                 ></div>
               </div>
@@ -218,8 +218,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
+import ArpeggiatorPanel from '~/components/ArpeggiatorPanel.vue';
 
 // import { 
 //   Play as IconPlay, 
@@ -234,15 +235,22 @@ import { ref, computed, onMounted, watch } from 'vue';
 // State variables
 const isPlaying = ref(false);
 const algorithm = ref('bubbleSort');
-const soundTheme = ref('electronic');
-const speed = ref(1);
 const activeTab = ref('explore');
 const dataSize = ref(20);
 const editorTab = ref('algorithm');
 const visualizationCanvas = ref(null);
+const arpeggiatorPanel = ref(null);
 
 // Sample array data
 const arrayData = ref([]);
+
+// Sorting state
+const sortingState = ref({
+    isSorting: false,
+    currentIndices: [] as number[],
+    swappedIndices: [] as number[],
+    sortedIndices: [] as number[]
+});
 
 // Algorithm code for editor
 const algorithmCode = ref(`// Example of a custom algorithm
@@ -322,6 +330,72 @@ const regenerateData = () => {
 watch(dataSize, () => {
   regenerateData();
 });
+
+// Color logic for bars based on sorting state
+const getBarColor = (index: number, value: number) => {
+    if (sortingState.value.sortedIndices.includes(index)) {
+        return '#10b981'; // Green for sorted
+    }
+    if (sortingState.value.swappedIndices.includes(index)) {
+        return '#ef4444'; // Red for swapped
+    }
+    if (sortingState.value.currentIndices.includes(index)) {
+        return '#f59e0b'; // Orange for currently comparing
+    }
+    return '#6366f1'; // Default blue
+};
+
+// Bubble sort with sound visualization
+const bubbleSortWithSound = async () => {
+    if (sortingState.value.isSorting) return;
+    
+    sortingState.value.isSorting = true;
+    sortingState.value.sortedIndices = [];
+    const arr = [...arrayData.value];
+    const n = arr.length;
+    
+    for (let i = 0; i < n - 1; i++) {
+        for (let j = 0; j < n - i - 1; j++) {
+            // Highlight current comparison
+            sortingState.value.currentIndices = [j, j + 1];
+            sortingState.value.swappedIndices = [];
+            
+            // Play sound for both values being compared
+            arpeggiatorPanel.value?.playNoteForValue(arr[j]);
+            await new Promise(resolve => setTimeout(resolve, 200));
+            arpeggiatorPanel.value?.playNoteForValue(arr[j + 1]);
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            if (arr[j] > arr[j + 1]) {
+                // Swap and highlight
+                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+                arrayData.value = [...arr];
+                sortingState.value.swappedIndices = [j, j + 1];
+                
+                // Play a chord for the swap
+                arpeggiatorPanel.value?.playNoteForValue(arr[j]);
+                setTimeout(() => arpeggiatorPanel.value?.playNoteForValue(arr[j + 1]), 100);
+                
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+        }
+        // Mark as sorted
+        sortingState.value.sortedIndices.push(n - 1 - i);
+    }
+    
+    // Mark first element as sorted
+    sortingState.value.sortedIndices.push(0);
+    sortingState.value.currentIndices = [];
+    sortingState.value.swappedIndices = [];
+    sortingState.value.isSorting = false;
+};
+
+// Start sorting when play button is clicked
+const startSorting = () => {
+    if (!sortingState.value.isSorting) {
+        bubbleSortWithSound();
+    }
+};
 
 onMounted(() => {
   regenerateData();

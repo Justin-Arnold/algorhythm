@@ -3,6 +3,14 @@ import * as Tone from "tone";
 import ArpeggioPlayer from '../utils/arpeggiator';
 import { Keys, Mode, type Key } from "~/utils/arpeggiator/types";
 
+const props = defineProps<{
+    data?: number[]
+}>();
+
+const emit = defineEmits<{
+    startSorting: []
+}>();
+
 let synth: Tone.Synth;
 let player: ArpeggioPlayer;
 
@@ -12,7 +20,29 @@ onMounted(() => {
         container_selector: '#main',
         aside_selector: '#aside',
         play_toggle_selector: '#play-toggle',
-    })
+    }, props.data)
+});
+
+// Watch for data changes and update the arpeggiator
+watch(() => props.data, (newData) => {
+    if (newData && player?.updateData) {
+        player.updateData(newData);
+    }
+}, { deep: true });
+
+// Expose methods for external use (like during sorting)
+const playNoteForValue = (value: number) => {
+    if (!props.data || !player?.playNoteForValue) return;
+    
+    const minValue = Math.min(...props.data);
+    const maxValue = Math.max(...props.data);
+    player.playNoteForValue(value, minValue, maxValue, '8n');
+};
+
+// Make playNoteForValue available to parent component
+defineExpose({
+    playNoteForValue,
+    player
 });
 
 const isPlaying = computed(() => {
@@ -126,16 +156,10 @@ watch(arpType, (newArpType) => {
         <div class="mt-auto">
             <button 
                 class="btn btn-primary w-full mb-4"
-                @click="player.playerToggle"
+                @click="$emit('startSorting')"
             >
-                <span v-if="isPlaying">
-                <!-- <IconPause class="mr-2" :size="18" /> -->
-                Pause
-                </span>
-                <span v-else>
                 <!-- <IconPlay class="mr-2" :size="18" /> -->
-                Play
-                </span>
+                Start Sorting
             </button>
             
             <button 

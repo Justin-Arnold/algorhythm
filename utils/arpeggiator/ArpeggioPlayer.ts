@@ -60,12 +60,13 @@ export default class ArpeggioPlayer {
     apUpdatePatternId?: (e: Event) => void;
     apUpdate?: () => void;
     playerUpdateBPM?: (newBeatsPerMinute: number) => void;
+    updateData?: (newData: number[]) => void;
 
-    constructor(params: PlayerParams) {
+    constructor(params: PlayerParams, initialData?: number[]) {
         this.container = document.querySelector(params.container_selector);
         this.aside = document.querySelector(params.aside_selector);
         this.play_toggle = document.querySelector(params.play_toggle_selector) as HTMLButtonElement || null;
-        this.chords = [1,2,4,0,3,6,0,2];
+        this.chords = initialData ? this.mapDataToChords(initialData) : [1,2,4,0,3,6,0,2];
         this.ms_key = 'B'
         this.ms_mode = Mode.MINOR
         this.ap_steps = 6;
@@ -95,6 +96,11 @@ export default class ArpeggioPlayer {
         // this._loadPatternSelector();
         this.loadSynths();
         this.loadTransport();
+        
+        // Set up data update function
+        this.updateData = (newData: number[]) => {
+            this.updateDataProgression(newData);
+        };
         
         // change tabs, pause player
         document.addEventListener('visibilitychange', () => {
@@ -511,6 +517,97 @@ export default class ArpeggioPlayer {
         this.arpeggio =  this.arpeggioPatterns?.patterns[this.ap_pattern_type][this.ap_pattern_id]; 
     //   this.apUpdate();
     };
+
+    /**
+     * Maps data array to chord positions based on relative height
+     * @param data - Array of numbers to be sorted/visualized
+     * @returns Array of chord positions (0-6 representing scale degrees)
+     */
+    private mapDataToChords(data: number[]): number[] {
+        if (data.length === 0) return [1,2,4,0,3,6,0,2]; // fallback
+
+        // Create array of indices sorted by data values
+        const sortedIndices = Array.from({ length: data.length }, (_, i) => i)
+            .sort((a, b) => data[a] - data[b]);
+        
+        // Create mapping from original indices to height ranks
+        const heightRanks: number[] = new Array(data.length);
+        sortedIndices.forEach((originalIndex, rank) => {
+            heightRanks[originalIndex] = rank;
+        });
+
+        // Map height ranks to chord positions (0-6 scale degrees)
+        const maxChordIndex = 6; // 7 scale degrees (0-6)
+        return heightRanks.map(rank => {
+            return Math.floor((rank / (data.length - 1)) * maxChordIndex);
+        });
+    }
+
+    /**
+     * Updates the chord progression with new data
+     * @param newData - New array of numbers to visualize
+     */
+    updateDataProgression(newData: number[]): void {
+        this.chords = this.mapDataToChords(newData);
+        this.chord_count = this.chords.length;
+        // Reset player position to start of new progression
+        this.player.chord_step = 0;
+        this.player.step = 0;
+    }
+
+    /**
+     * Maps a single data value to a specific note in the arpeggio based on the current scale
+     * @param value - The data value to map
+     * @param minValue - Minimum value in the dataset
+     * @param maxValue - Maximum value in the dataset
+     * @returns Object containing note information { note: string, octave: number }
+     */
+    mapValueToNote(value: number, minValue: number, maxValue: number): { note: string, octave: number } {
+        if (!this.musicalScale || !this.arpeggio || this.arpeggio.length === 0) {
+            return { note: 'C', octave: 4 }; // fallback
+        }
+
+        // Normalize the value to a 0-1 range
+        const normalizedValue = maxValue === minValue ? 0.5 : (value - minValue) / (maxValue - minValue);
+        
+        // Get the current chord (using first chord for note mapping)
+        const chord = this.musicalScale.notes[this.chords[0] || 0];
+        if (!chord) return { note: 'C', octave: 4 };
+
+        // Build the full note array (same logic as in loadTransport)
+        let notes = chord.triad.notes;
+        for(let i = 0; i < Math.ceil(this.ap_steps / 3); i++) {
+            notes = notes.concat(notes.map((n) => { 
+                return { note: n.note, rel_octave: n.rel_octave + (i + 1)}
+            }));
+        }
+
+        // Map normalized value to arpeggio position
+        const arpeggioIndex = Math.floor(normalizedValue * (this.arpeggio.length - 1));
+        const noteIndex = this.arpeggio[arpeggioIndex];
+        const selectedNote = notes[noteIndex] || notes[0];
+
+        return {
+            note: selectedNote.note,
+            octave: selectedNote.rel_octave + this.player.octave_base
+        };
+    }
+
+    /**
+     * Plays a note based on a data value (for sorting step visualization)
+     * @param value - The data value
+     * @param minValue - Minimum value in dataset
+     * @param maxValue - Maximum value in dataset
+     * @param duration - Note duration (defaults to '16n')
+     */
+    playNoteForValue(value: number, minValue: number, maxValue: number, duration: string = '16n'): void {
+        if (!this.synths?.treb) return;
+
+        const { note, octave } = this.mapValueToNote(value, minValue, maxValue);
+        const noteRef = `${note}${octave}`;
+        
+        this.synths.treb.triggerAttackRelease(noteRef, duration);
+    }
     
     // _utilClassToggle(el, classname) {
     //   let curr = document.querySelectorAll('.' + classname);
