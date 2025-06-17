@@ -367,6 +367,10 @@ const bubbleSortWithSound = async () => {
             sortingState.value.currentIndices = [j, j + 1];
             sortingState.value.swappedIndices = [];
             
+            // Play kick drum for comparison
+            arpeggiatorPanel.value?.playKickDrum();
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             // Play sound for both values being compared
             arpeggiatorPanel.value?.playNoteForValue(arr[j]);
             await new Promise(resolve => setTimeout(resolve, 200));

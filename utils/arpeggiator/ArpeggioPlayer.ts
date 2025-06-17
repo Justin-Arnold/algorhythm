@@ -39,6 +39,7 @@ export default class ArpeggioPlayer {
         master: Tone.Gain;
         treb: Tone.Gain;
         bass: Tone.Gain;
+        kick: Tone.Gain;
     };
     fx?: {
         distortion: Tone.Distortion;
@@ -48,6 +49,7 @@ export default class ArpeggioPlayer {
     synths?: {
         treb: Tone.PolySynth;
         bass: Tone.DuoSynth;
+        kick: Tone.MembraneSynth;
     };
     musicalScale?: MusicalScale;
     arpeggioPatterns?: ArpeggioPatterns;
@@ -127,6 +129,7 @@ export default class ArpeggioPlayer {
             master: new Tone.Gain(0.7),
             treb: new Tone.Gain(0.7),
             bass: new Tone.Gain(0.8),
+            kick: new Tone.Gain(0.9),
         };
         this.fx = {
             distortion: new Tone.Distortion(0.8),
@@ -145,7 +148,21 @@ export default class ArpeggioPlayer {
                     release: 2.0
                 }
             }),  
-            bass: new Tone.DuoSynth()
+            bass: new Tone.DuoSynth(),
+            kick: new Tone.MembraneSynth({
+                pitchDecay: 0.05,
+                octaves: 10,
+                oscillator: {
+                    type: 'sine'
+                },
+                envelope: {
+                    attack: 0.001,
+                    decay: 0.4,
+                    sustain: 0.01,
+                    release: 1.4,
+                    attackCurve: 'exponential'
+                }
+            })
         };
         this.synths.bass.vibratoAmount.value = 0.1;
         this.synths.bass.harmonicity.value = 1.5;
@@ -161,9 +178,11 @@ export default class ArpeggioPlayer {
         this.channel.master.toMaster();
         this.channel.treb.connect(this.channel.master);
         this.channel.bass.connect(this.channel.master);
+        this.channel.kick.connect(this.channel.master);
         // fx chains
         this.synths.treb.chain(this.fx.delay, this.fx.reverb, this.channel.treb);
         this.synths.bass.chain(this.fx.distortion, this.channel.bass);
+        this.synths.kick.connect(this.channel.kick);
     };
     
     private loadTransport() {
@@ -607,6 +626,16 @@ export default class ArpeggioPlayer {
         const noteRef = `${note}${octave}`;
         
         this.synths.treb.triggerAttackRelease(noteRef, duration);
+    }
+
+    /**
+     * Plays a kick drum sound for sorting comparisons
+     * @param duration - Note duration (defaults to '16n')
+     */
+    playKickDrum(duration: string = '16n'): void {
+        if (!this.synths?.kick) return;
+        
+        this.synths.kick.triggerAttackRelease('C1', duration);
     }
     
     // _utilClassToggle(el, classname) {

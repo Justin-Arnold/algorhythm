@@ -41,9 +41,15 @@ const playNoteForValue = (value: number) => {
     player.playNoteForValue(value, minValue, maxValue, '8n');
 };
 
-// Make playNoteForValue available to parent component
+const playKickDrum = () => {
+    if (!player?.playKickDrum) return;
+    player.playKickDrum('8n');
+};
+
+// Make methods available to parent component
 defineExpose({
     playNoteForValue,
+    playKickDrum,
     player
 });
 
