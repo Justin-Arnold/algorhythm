@@ -46,10 +46,16 @@ const playKickDrum = () => {
     player.playKickDrum('8n');
 };
 
+const playHiHat = () => {
+    if (!player?.playHiHat) return;
+    player.playHiHat('32n');
+};
+
 // Make methods available to parent component
 defineExpose({
     playNoteForValue,
     playKickDrum,
+    playHiHat,
     player
 });
 

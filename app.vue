@@ -383,6 +383,9 @@ const bubbleSortWithSound = async () => {
                 arrayData.value = [...arr];
                 sortingState.value.swappedIndices = [j, j + 1];
                 
+                // Play hi-hat for swap
+                arpeggiatorPanel.value?.playHiHat();
+                
                 // Play a chord for the swap
                 arpeggiatorPanel.value?.playNoteForValue(arr[j]);
                 setTimeout(() => arpeggiatorPanel.value?.playNoteForValue(arr[j + 1]), 100);

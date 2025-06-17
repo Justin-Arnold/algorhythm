@@ -40,6 +40,7 @@ export default class ArpeggioPlayer {
         treb: Tone.Gain;
         bass: Tone.Gain;
         kick: Tone.Gain;
+        hihat: Tone.Gain;
     };
     fx?: {
         distortion: Tone.Distortion;
@@ -50,6 +51,7 @@ export default class ArpeggioPlayer {
         treb: Tone.PolySynth;
         bass: Tone.DuoSynth;
         kick: Tone.MembraneSynth;
+        hihat: Tone.NoiseSynth;
     };
     musicalScale?: MusicalScale;
     arpeggioPatterns?: ArpeggioPatterns;
@@ -130,6 +132,7 @@ export default class ArpeggioPlayer {
             treb: new Tone.Gain(0.7),
             bass: new Tone.Gain(0.8),
             kick: new Tone.Gain(0.9),
+            hihat: new Tone.Gain(0.6),
         };
         this.fx = {
             distortion: new Tone.Distortion(0.8),
@@ -162,6 +165,17 @@ export default class ArpeggioPlayer {
                     release: 1.4,
                     attackCurve: 'exponential'
                 }
+            }),
+            hihat: new Tone.NoiseSynth({
+                noise: {
+                    type: 'white'
+                },
+                envelope: {
+                    attack: 0.001,
+                    decay: 0.05,
+                    sustain: 0.0,
+                    release: 0.05
+                }
             })
         };
         this.synths.bass.vibratoAmount.value = 0.1;
@@ -179,10 +193,12 @@ export default class ArpeggioPlayer {
         this.channel.treb.connect(this.channel.master);
         this.channel.bass.connect(this.channel.master);
         this.channel.kick.connect(this.channel.master);
+        this.channel.hihat.connect(this.channel.master);
         // fx chains
         this.synths.treb.chain(this.fx.delay, this.fx.reverb, this.channel.treb);
         this.synths.bass.chain(this.fx.distortion, this.channel.bass);
         this.synths.kick.connect(this.channel.kick);
+        this.synths.hihat.connect(this.channel.hihat);
     };
     
     private loadTransport() {
@@ -636,6 +652,16 @@ export default class ArpeggioPlayer {
         if (!this.synths?.kick) return;
         
         this.synths.kick.triggerAttackRelease('C1', duration);
+    }
+
+    /**
+     * Plays a hi-hat sound for sorting swaps
+     * @param duration - Note duration (defaults to '32n')
+     */
+    playHiHat(duration: string = '32n'): void {
+        if (!this.synths?.hihat) return;
+        
+        this.synths.hihat.triggerAttackRelease(duration);
     }
     
     // _utilClassToggle(el, classname) {
