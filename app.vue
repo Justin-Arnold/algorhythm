@@ -112,7 +112,13 @@
           </button>
         </div>
       </div> -->
-      <ArpeggiatorPanel ref="arpeggiatorPanel" :data="arrayData" @start-sorting="startSorting" />
+      <ArpeggiatorPanel 
+        ref="arpeggiatorPanel" 
+        :data="arrayData" 
+        :is-sorting="sortingState.isSorting" 
+        @start-sorting="startSorting"
+        @stop-sorting="stopSorting"
+      />
       <!-- Main Visualization Area -->
       <div class="flex-1 overflow-hidden flex flex-col">
         <!-- Visualization Canvas -->
@@ -356,6 +362,7 @@ const bubbleSortWithSound = async () => {
     
     for (let i = 0; i < n - 1; i++) {
         for (let j = 0; j < n - i - 1; j++) {
+            if (!sortingState.value.isSorting) return; // Stop if sorting is cancelled
             // Highlight current comparison
             sortingState.value.currentIndices = [j, j + 1];
             sortingState.value.swappedIndices = [];
@@ -395,6 +402,12 @@ const startSorting = () => {
     if (!sortingState.value.isSorting) {
         bubbleSortWithSound();
     }
+};
+
+const stopSorting = () => {
+    sortingState.value.isSorting = false;
+    sortingState.value.currentIndices = [];
+    sortingState.value.swappedIndices = [];
 };
 
 onMounted(() => {

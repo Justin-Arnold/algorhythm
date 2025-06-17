@@ -5,10 +5,12 @@ import { Keys, Mode, type Key } from "~/utils/arpeggiator/types";
 
 const props = defineProps<{
     data?: number[]
+    isSorting?: boolean
 }>();
 
 const emit = defineEmits<{
     startSorting: []
+    stopSorting: []
 }>();
 
 let synth: Tone.Synth;
@@ -45,8 +47,8 @@ defineExpose({
     player
 });
 
-const isPlaying = computed(() => {
-    return player?.player.playing
+const startStopButtonText = computed(() => {
+    return props.isSorting ? 'Stop' : 'Start';
 });
 
 const algorithm = ref('bubbleSort');
@@ -78,6 +80,13 @@ watch(arpType, (newArpType) => {
     player.apUpdatePatternType(newArpType);
 });
 
+function toggleSorting() {
+    if (props.isSorting) {
+        emit('stopSorting')
+    } else {
+        emit('startSorting')
+    }
+}
 </script>
 
 <template>
@@ -156,10 +165,10 @@ watch(arpType, (newArpType) => {
         <div class="mt-auto">
             <button 
                 class="btn btn-primary w-full mb-4"
-                @click="$emit('startSorting')"
+                @click="toggleSorting"
             >
                 <!-- <IconPlay class="mr-2" :size="18" /> -->
-                Start Sorting
+                {{ startStopButtonText }}
             </button>
             
             <button 
