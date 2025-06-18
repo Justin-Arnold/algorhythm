@@ -51,11 +51,16 @@ const playHiHat = () => {
     player.playHiHat('32n');
 };
 
+const getCurrentBPM = () => {
+    return player?.getCurrentBPM() || 75;
+};
+
 // Make methods available to parent component
 defineExpose({
     playNoteForValue,
     playKickDrum,
     playHiHat,
+    getCurrentBPM,
     player
 });
 

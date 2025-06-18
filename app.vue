@@ -227,6 +227,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import ArpeggiatorPanel from '~/components/ArpeggiatorPanel.vue';
+import ArpeggioPlayer from '~/utils/arpeggiator/ArpeggioPlayer';
 
 // import { 
 //   Play as IconPlay, 
@@ -367,15 +368,20 @@ const bubbleSortWithSound = async () => {
             sortingState.value.currentIndices = [j, j + 1];
             sortingState.value.swappedIndices = [];
             
+            // Get current BPM for timing
+            const currentBPM = arpeggiatorPanel.value?.getCurrentBPM() || 75;
+            const sixteenthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '16n');
+            const eighthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '8n');
+            
             // Play kick drum for comparison
             arpeggiatorPanel.value?.playKickDrum();
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
             
             // Play sound for both values being compared
             arpeggiatorPanel.value?.playNoteForValue(arr[j]);
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
             arpeggiatorPanel.value?.playNoteForValue(arr[j + 1]);
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
             
             if (arr[j] > arr[j + 1]) {
                 // Swap and highlight
@@ -388,9 +394,9 @@ const bubbleSortWithSound = async () => {
                 
                 // Play a chord for the swap
                 arpeggiatorPanel.value?.playNoteForValue(arr[j]);
-                setTimeout(() => arpeggiatorPanel.value?.playNoteForValue(arr[j + 1]), 100);
+                setTimeout(() => arpeggiatorPanel.value?.playNoteForValue(arr[j + 1]), sixteenthNoteMs);
                 
-                await new Promise(resolve => setTimeout(resolve, 300));
+                await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
             }
         }
         // Mark as sorted

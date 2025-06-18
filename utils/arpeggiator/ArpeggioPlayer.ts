@@ -663,6 +663,42 @@ export default class ArpeggioPlayer {
         
         this.synths.hihat.triggerAttackRelease(duration);
     }
+
+    /**
+     * Gets the current BPM value
+     */
+    getCurrentBPM(): number {
+        return this.player.bpm;
+    }
+
+    /**
+     * Converts BPM to milliseconds for a quarter note
+     * @param bpm - Beats per minute
+     * @returns Milliseconds per quarter note
+     */
+    static bpmToMs(bpm: number): number {
+        return (60 / bpm) * 1000;
+    }
+
+    /**
+     * Converts BPM to milliseconds for different note values
+     * @param bpm - Beats per minute  
+     * @param noteValue - Note value ('4n', '8n', '16n', etc.)
+     * @returns Milliseconds for the note value
+     */
+    static bpmToMsForNote(bpm: number, noteValue: string = '4n'): number {
+        const quarterNoteMs = this.bpmToMs(bpm);
+        
+        switch (noteValue) {
+            case '1n': return quarterNoteMs * 4;
+            case '2n': return quarterNoteMs * 2;
+            case '4n': return quarterNoteMs;
+            case '8n': return quarterNoteMs / 2;
+            case '16n': return quarterNoteMs / 4;
+            case '32n': return quarterNoteMs / 8;
+            default: return quarterNoteMs;
+        }
+    }
     
     // _utilClassToggle(el, classname) {
     //   let curr = document.querySelectorAll('.' + classname);
