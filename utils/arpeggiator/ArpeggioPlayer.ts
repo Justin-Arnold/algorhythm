@@ -41,6 +41,8 @@ export default class ArpeggioPlayer {
         bass: Tone.Gain;
         kick: Tone.Gain;
         hihat: Tone.Gain;
+        snare: Tone.Gain;
+        bell: Tone.Gain;
     };
     fx?: {
         distortion: Tone.Distortion;
@@ -52,6 +54,8 @@ export default class ArpeggioPlayer {
         bass: Tone.DuoSynth;
         kick: Tone.MembraneSynth;
         hihat: Tone.NoiseSynth;
+        snare: Tone.NoiseSynth;
+        bell: Tone.FMSynth;
     };
     musicalScale?: MusicalScale;
     arpeggioPatterns?: ArpeggioPatterns;
@@ -133,6 +137,8 @@ export default class ArpeggioPlayer {
             bass: new Tone.Gain(0.8),
             kick: new Tone.Gain(0.9),
             hihat: new Tone.Gain(0.6),
+            snare: new Tone.Gain(0.7),
+            bell: new Tone.Gain(0.5),
         };
         this.fx = {
             distortion: new Tone.Distortion(0.8),
@@ -176,6 +182,39 @@ export default class ArpeggioPlayer {
                     sustain: 0.0,
                     release: 0.05
                 }
+            }),
+            snare: new Tone.NoiseSynth({
+                noise: {
+                    type: 'white'
+                },
+                envelope: {
+                    attack: 0.001,
+                    decay: 0.2,
+                    sustain: 0.0,
+                    release: 0.2
+                }
+            }),
+            bell: new Tone.FMSynth({
+                harmonicity: 8,
+                modulationIndex: 2,
+                oscillator: {
+                    type: 'sine'
+                },
+                envelope: {
+                    attack: 0.001,
+                    decay: 2,
+                    sustain: 0.1,
+                    release: 2
+                },
+                modulation: {
+                    type: 'sine'
+                },
+                modulationEnvelope: {
+                    attack: 0.002,
+                    decay: 0.2,
+                    sustain: 0,
+                    release: 0.2
+                }
             })
         };
         this.synths.bass.vibratoAmount.value = 0.1;
@@ -194,11 +233,15 @@ export default class ArpeggioPlayer {
         this.channel.bass.connect(this.channel.master);
         this.channel.kick.connect(this.channel.master);
         this.channel.hihat.connect(this.channel.master);
+        this.channel.snare.connect(this.channel.master);
+        this.channel.bell.connect(this.channel.master);
         // fx chains
         this.synths.treb.chain(this.fx.delay, this.fx.reverb, this.channel.treb);
         this.synths.bass.chain(this.fx.distortion, this.channel.bass);
         this.synths.kick.connect(this.channel.kick);
         this.synths.hihat.connect(this.channel.hihat);
+        this.synths.snare.connect(this.channel.snare);
+        this.synths.bell.chain(this.fx.reverb, this.channel.bell);
     };
     
     private loadTransport() {
@@ -662,6 +705,26 @@ export default class ArpeggioPlayer {
         if (!this.synths?.hihat) return;
         
         this.synths.hihat.triggerAttackRelease(duration);
+    }
+
+    /**
+     * Plays a snare drum sound
+     * @param duration - Note duration (defaults to '16n')
+     */
+    playSnare(duration: string = '16n'): void {
+        if (!this.synths?.snare) return;
+        
+        this.synths.snare.triggerAttackRelease(duration);
+    }
+
+    /**
+     * Plays a bell sound
+     * @param duration - Note duration (defaults to '8n')
+     */
+    playBell(duration: string = '8n'): void {
+        if (!this.synths?.bell) return;
+        
+        this.synths.bell.triggerAttackRelease('C5', duration);
     }
 
     /**

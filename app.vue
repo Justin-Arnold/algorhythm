@@ -294,8 +294,8 @@ const bubbleSortWithSound = async () => {
             const sixteenthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '16n');
             const eighthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '8n');
             
-            // Play kick drum for comparison
-            arpeggiatorPanel.value?.playKickDrum();
+            // Play comparison sound
+            arpeggiatorPanel.value?.playComparisonSound();
             await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
             
             // Play sound for both values being compared
@@ -310,8 +310,8 @@ const bubbleSortWithSound = async () => {
                 arrayData.value = [...arr];
                 sortingState.value.swappedIndices = [j, j + 1];
                 
-                // Play hi-hat for swap
-                arpeggiatorPanel.value?.playHiHat();
+                // Play swap sound
+                arpeggiatorPanel.value?.playSwapSound();
                 
                 // Play a chord for the swap
                 arpeggiatorPanel.value?.playNoteForValue(arr[j]);

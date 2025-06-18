@@ -51,16 +51,54 @@ const playHiHat = () => {
     player.playHiHat('32n');
 };
 
+const playSnare = () => {
+    if (!player?.playSnare) return;
+    player.playSnare('16n');
+};
+
+const playBell = () => {
+    if (!player?.playBell) return;
+    player.playBell('8n');
+};
+
 const getCurrentBPM = () => {
     return player?.getCurrentBPM() || 75;
 };
+
+const playComparisonSound = () => {
+    switch (comparisonSound.value) {
+        case 'kick': playKickDrum(); break;
+        case 'hihat': playHiHat(); break;
+        case 'snare': playSnare(); break;
+        case 'bell': playBell(); break;
+        case 'none': break;
+    }
+};
+
+const playSwapSound = () => {
+    switch (swapSound.value) {
+        case 'kick': playKickDrum(); break;
+        case 'hihat': playHiHat(); break;
+        case 'snare': playSnare(); break;
+        case 'bell': playBell(); break;
+        case 'none': break;
+    }
+};
+const comparisonSound = ref<'none' | 'kick' | 'hihat' | 'snare' | 'bell'>('kick');
+const swapSound = ref<'none' | 'kick' | 'hihat' | 'snare' | 'bell'>('hihat');
 
 // Make methods available to parent component
 defineExpose({
     playNoteForValue,
     playKickDrum,
     playHiHat,
+    playSnare,
+    playBell,
+    playComparisonSound,
+    playSwapSound,
     getCurrentBPM,
+    comparisonSound,
+    swapSound,
     player
 });
 
@@ -76,6 +114,8 @@ const beatsPerMinute = ref(75);
 const mode = ref<Mode>(Mode.MINOR);
 const key = ref<Key>('B');
 const arpType = ref<'straight' | 'looped'>('straight');
+
+
 
 watch(beatsPerMinute, (newBPM) => {
     if (!player.playerUpdateBPM) return
@@ -161,6 +201,26 @@ function toggleSorting() {
         <div class="mb-6">
             <label class="label mb-2">{{ beatsPerMinute }} BPM</label>
             <input type="range" min="60" max="160" v-model="beatsPerMinute" class="range range-primary" />
+        </div>
+        <div class="mb-6">
+            <label class="label mb-2">Comparison Sound</label>
+            <select v-model="comparisonSound" class="select select-primary">
+                <option value="none">None</option>
+                <option value="kick">Kick Drum</option>
+                <option value="hihat">Hi-Hat</option>
+                <option value="snare">Snare Drum</option>
+                <option value="bell">Bell</option>
+            </select>
+        </div>
+        <div class="mb-6">
+            <label class="label mb-2">Swap Sound</label>
+            <select v-model="swapSound" class="select select-primary">
+                <option value="none">None</option>
+                <option value="kick">Kick Drum</option>
+                <option value="hihat">Hi-Hat</option>
+                <option value="snare">Snare Drum</option>
+                <option value="bell">Bell</option>
+            </select>
         </div>
         <div class="mt-auto">
             <button 
