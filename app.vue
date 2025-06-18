@@ -2,9 +2,9 @@
 <template>
   <div class="flex flex-col h-screen bg-gray-900 text-white">
     <!-- Header -->
-    <header class="p-4 bg-gray-800 border-b border-gray-700">
+    <header class="p-4 bg-base-100">
       <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-indigo-400">AlgoRhythm</h1>
+        <h1 class="text-2xl font-bold text-primary">AlgoRhythm</h1>
         <nav class="flex">
           <button 
             class="px-4 py-2 rounded-l-md"
@@ -43,7 +43,7 @@
       <!-- Main Visualization Area -->
       <div class="flex-1 overflow-hidden flex flex-col">
         <!-- Visualization Canvas -->
-        <div class="flex-1 bg-gray-800 rounded-lg overflow-hidden flex justify-center items-center mb-4 relative">
+        <div class="flex-1 bg-base-100 rounded-box p-4 overflow-hidden flex justify-center items-center relative">
           <!-- Canvas for visualization -->
           <div ref="visualizationCanvas" class="absolute inset-0">
             <div class="w-full h-full">

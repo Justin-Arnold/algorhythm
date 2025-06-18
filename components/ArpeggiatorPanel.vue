@@ -151,7 +151,7 @@ function toggleSorting() {
         <div class="mb-6">
             <label class="label mb-2">Algorithm</label>
             <select 
-                class="w-full bg-gray-700 rounded p-2 text-white border border-gray-600"
+                class="select select-primary"
                 v-model="algorithm"
             >
                 <option value="bubbleSort">Bubble Sort</option>
@@ -166,7 +166,7 @@ function toggleSorting() {
         <div class="mb-6">
             <label class="label mb-2">Sound Theme</label>
             <select 
-                class="w-full bg-gray-700 rounded p-2 text-white border border-gray-600"
+                class="select select-primary"
                 v-model="soundTheme"
             >
                 <option value="electronic">Electronic</option>
