@@ -137,23 +137,6 @@ function toggleSorting() {
             </select>
         </div>
         <div class="mb-6">
-            <label class="label mb-2">Arpeggio Type</label>
-            <div class="flex  gap-4">
-                <div class="flex items-center gap-2">
-                    <input type="radio" v-model="arpType" value="straight" class="radio radio-primary" />
-                    <label class="label cursor-pointer">
-                        <span class="label-text">Straight</span>
-                    </label>    
-                </div>
-                <div class="flex items-center gap-2">
-                    <input type="radio" v-model="arpType" value="looped" class="radio radio-primary" />
-                    <label class="label cursor-pointer">
-                        <span class="label-text">Looped</span>
-                    </label>
-                </div>
-            </div>
-        </div>
-        <div class="mb-6">
             <label class="label mb-2">Key</label>
             <select v-model="key" class="select select-primary">
                 <option v-for="key in Keys" :value="key">{{key}}</option>
