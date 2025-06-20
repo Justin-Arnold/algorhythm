@@ -11,6 +11,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     startSorting: []
     stopSorting: []
+    algorithmChanged: [algorithm: string]
 }>();
 
 let synth: Tone.Synth;
@@ -86,6 +87,7 @@ const playSwapSound = () => {
 };
 const comparisonSound = ref<'none' | 'kick' | 'hihat' | 'snare' | 'bell'>('kick');
 const swapSound = ref<'none' | 'kick' | 'hihat' | 'snare' | 'bell'>('hihat');
+const algorithm = ref('bubbleSort');
 
 // Make methods available to parent component
 defineExpose({
@@ -99,6 +101,7 @@ defineExpose({
     getCurrentBPM,
     comparisonSound,
     swapSound,
+    algorithm,
     player
 });
 
@@ -106,7 +109,7 @@ const startStopButtonText = computed(() => {
     return props.isSorting ? 'Stop' : 'Start';
 });
 
-const algorithm = ref('bubbleSort');
+
 const soundTheme = ref('electronic');
 
 const beatsPerMinute = ref(75);
@@ -135,6 +138,10 @@ watch(key, (newKey) => {
 watch(arpType, (newArpType) => {
     if (!player.apUpdatePatternType) return
     player.apUpdatePatternType(newArpType);
+});
+
+watch(algorithm, (newAlgorithm) => {
+    emit('algorithmChanged', newAlgorithm);
 });
 
 function toggleSorting() {

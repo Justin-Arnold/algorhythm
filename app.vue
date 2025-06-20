@@ -39,6 +39,7 @@
         :is-sorting="sortingState.isSorting" 
         @start-sorting="startSorting"
         @stop-sorting="stopSorting"
+        @algorithm-changed="(newAlgorithm) => algorithm = newAlgorithm"
       />
       <!-- Main Visualization Area -->
       <div class="flex-1 overflow-hidden flex flex-col">
@@ -177,7 +178,14 @@ const sortingState = ref({
     isSorting: false,
     currentIndices: [] as number[],
     swappedIndices: [] as number[],
-    sortedIndices: [] as number[]
+    sortedIndices: [] as number[],
+    leftSubarray: [] as number[],
+    rightSubarray: [] as number[],
+    mergingRange: null as { left: number, right: number } | null,
+    pivotIndex: -1,
+    partitionRange: null as { left: number, right: number } | null,
+    leftPartition: [] as number[],
+    rightPartition: [] as number[]
 });
 
 // Algorithm code for editor
@@ -241,6 +249,17 @@ const algorithmInfo = computed(() => {
       timeComplexity: 'O(n log n)',
       spaceComplexity: 'O(n)'
     },
+    quickSort: {
+      name: 'Quick Sort',
+      description: 'Quick Sort is a divide-and-conquer algorithm that selects a pivot element and partitions the array around it, recursively sorting the sub-arrays.',
+      sounds: [
+        'Pivot selection is marked with a distinctive bell sound',
+        'Partitioning creates ascending scales and rhythmic swaps',
+        'Each correctly placed pivot plays a resolution chord'
+      ],
+      timeComplexity: 'O(n log n) average, O(n²) worst',
+      spaceComplexity: 'O(log n)'
+    },
     // Add more algorithm information as needed
   };
   
@@ -264,11 +283,36 @@ const getBarColor = (index: number, value: number) => {
     if (sortingState.value.sortedIndices.includes(index)) {
         return '#10b981'; // Green for sorted
     }
+    if (sortingState.value.pivotIndex === index) {
+        return '#dc2626'; // Dark red for pivot
+    }
     if (sortingState.value.swappedIndices.includes(index)) {
-        return '#ef4444'; // Red for swapped
+        return '#ef4444'; // Red for swapped/merged
     }
     if (sortingState.value.currentIndices.includes(index)) {
         return '#f59e0b'; // Orange for currently comparing
+    }
+    if (sortingState.value.leftPartition.includes(index)) {
+        return '#8b5cf6'; // Purple for left partition (elements < pivot)
+    }
+    if (sortingState.value.rightPartition.includes(index)) {
+        return '#06b6d4'; // Cyan for right partition (elements > pivot)
+    }
+    if (sortingState.value.leftSubarray.includes(index)) {
+        return '#8b5cf6'; // Purple for left subarray (merge sort)
+    }
+    if (sortingState.value.rightSubarray.includes(index)) {
+        return '#06b6d4'; // Cyan for right subarray (merge sort)
+    }
+    if (sortingState.value.mergingRange && 
+        index >= sortingState.value.mergingRange.left && 
+        index <= sortingState.value.mergingRange.right) {
+        return '#fbbf24'; // Yellow for merging range
+    }
+    if (sortingState.value.partitionRange && 
+        index >= sortingState.value.partitionRange.left && 
+        index <= sortingState.value.partitionRange.right) {
+        return '#fbbf24'; // Yellow for current partition range
     }
     return '#6366f1'; // Default blue
 };
@@ -279,6 +323,13 @@ const bubbleSortWithSound = async () => {
     
     sortingState.value.isSorting = true;
     sortingState.value.sortedIndices = [];
+    sortingState.value.leftSubarray = [];
+    sortingState.value.rightSubarray = [];
+    sortingState.value.mergingRange = null;
+    sortingState.value.pivotIndex = -1;
+    sortingState.value.partitionRange = null;
+    sortingState.value.leftPartition = [];
+    sortingState.value.rightPartition = [];
     const arr = [...arrayData.value];
     const n = arr.length;
     
@@ -331,10 +382,351 @@ const bubbleSortWithSound = async () => {
     sortingState.value.isSorting = false;
 };
 
+// Merge sort with sound visualization
+const mergeSortWithSound = async () => {
+    if (sortingState.value.isSorting) return;
+    
+    console.log('Merge sort starting with array:', arrayData.value);
+    sortingState.value.isSorting = true;
+    sortingState.value.sortedIndices = [];
+    sortingState.value.currentIndices = [];
+    sortingState.value.swappedIndices = [];
+    sortingState.value.leftSubarray = [];
+    sortingState.value.rightSubarray = [];
+    sortingState.value.mergingRange = null;
+    
+    const arr = [...arrayData.value];
+    
+    const merge = async (left: number, mid: number, right: number) => {
+        if (!sortingState.value.isSorting) return;
+        
+        // Highlight the subarrays being merged
+        sortingState.value.leftSubarray = Array.from({length: mid - left + 1}, (_, i) => left + i);
+        sortingState.value.rightSubarray = Array.from({length: right - mid}, (_, i) => mid + 1 + i);
+        sortingState.value.mergingRange = { left, right };
+        sortingState.value.currentIndices = [];
+        sortingState.value.swappedIndices = [];
+        
+        const currentBPM = arpeggiatorPanel.value?.getCurrentBPM() || 75;
+        const quarterNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '4n');
+        
+        // Show the division for a moment
+        await new Promise(resolve => setTimeout(resolve, quarterNoteMs));
+        
+        const leftArr = arr.slice(left, mid + 1);
+        const rightArr = arr.slice(mid + 1, right + 1);
+        
+        let i = 0, j = 0, k = left;
+        
+        const sixteenthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '16n');
+        const eighthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '8n');
+        
+        while (i < leftArr.length && j < rightArr.length) {
+            if (!sortingState.value.isSorting) return;
+            
+            // Highlight elements being compared
+            sortingState.value.currentIndices = [left + i, mid + 1 + j];
+            
+            // Play comparison sound (one sound per beat like bubble sort)
+            arpeggiatorPanel.value?.playComparisonSound();
+            await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
+            
+            // Play one note for the comparison
+            arpeggiatorPanel.value?.playNoteForValue(leftArr[i]);
+            await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+            
+            if (leftArr[i] <= rightArr[j]) {
+                arr[k] = leftArr[i];
+                i++;
+            } else {
+                arr[k] = rightArr[j];
+                j++;
+                // Play swap sound for merge operation
+                arpeggiatorPanel.value?.playSwapSound();
+                await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
+            }
+            
+            // Update visualization
+            arrayData.value = [...arr];
+            sortingState.value.swappedIndices = [k];
+            
+            // Play note for merged element (final sound of this beat)
+            arpeggiatorPanel.value?.playNoteForValue(arr[k]);
+            await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+            
+            k++;
+        }
+        
+        // Copy remaining elements from left
+        while (i < leftArr.length) {
+            if (!sortingState.value.isSorting) return;
+            arr[k] = leftArr[i];
+            arrayData.value = [...arr];
+            sortingState.value.swappedIndices = [k];
+            sortingState.value.currentIndices = [left + i];
+            arpeggiatorPanel.value?.playNoteForValue(arr[k]);
+            await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+            i++;
+            k++;
+        }
+        
+        // Copy remaining elements from right
+        while (j < rightArr.length) {
+            if (!sortingState.value.isSorting) return;
+            arr[k] = rightArr[j];
+            arrayData.value = [...arr];
+            sortingState.value.swappedIndices = [k];
+            sortingState.value.currentIndices = [mid + 1 + j];
+            arpeggiatorPanel.value?.playNoteForValue(arr[k]);
+            await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+            j++;
+            k++;
+        }
+        
+        // Clear subarray highlights and mark merged section as sorted
+        sortingState.value.leftSubarray = [];
+        sortingState.value.rightSubarray = [];
+        sortingState.value.mergingRange = null;
+        sortingState.value.currentIndices = [];
+        sortingState.value.swappedIndices = [];
+        
+        for (let idx = left; idx <= right; idx++) {
+            if (!sortingState.value.sortedIndices.includes(idx)) {
+                sortingState.value.sortedIndices.push(idx);
+            }
+        }
+        
+        // Brief pause to show the sorted section
+        await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+    };
+    
+    const mergeSortRecursive = async (left: number, right: number) => {
+        console.log(`mergeSortRecursive called with left=${left}, right=${right}`);
+        if (!sortingState.value.isSorting || left >= right) {
+            console.log(`Base case hit: isSorting=${sortingState.value.isSorting}, left >= right: ${left >= right}`);
+            return;
+        }
+        
+        const mid = Math.floor((left + right) / 2);
+        
+        // Highlight the current range being divided
+        sortingState.value.currentIndices = Array.from({length: right - left + 1}, (_, i) => left + i);
+        sortingState.value.leftSubarray = [];
+        sortingState.value.rightSubarray = [];
+        
+        const currentBPM = arpeggiatorPanel.value?.getCurrentBPM() || 75;
+        const eighthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '8n');
+        const quarterNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '4n');
+        
+        // Play single note to indicate division start
+        arpeggiatorPanel.value?.playNoteForValue(arr[left]);
+        await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+        
+        // Clear highlighting before recursion
+        sortingState.value.currentIndices = [];
+        await new Promise(resolve => setTimeout(resolve, quarterNoteMs));
+        
+        await mergeSortRecursive(left, mid);
+        await mergeSortRecursive(mid + 1, right);
+        await merge(left, mid, right);
+    };
+    
+    await mergeSortRecursive(0, arr.length - 1);
+    
+    // Final cleanup
+    sortingState.value.currentIndices = [];
+    sortingState.value.swappedIndices = [];
+    sortingState.value.leftSubarray = [];
+    sortingState.value.rightSubarray = [];
+    sortingState.value.mergingRange = null;
+    sortingState.value.isSorting = false;
+};
+
+// Quick sort with sound visualization
+const quickSortWithSound = async () => {
+    if (sortingState.value.isSorting) return;
+    
+    sortingState.value.isSorting = true;
+    sortingState.value.sortedIndices = [];
+    sortingState.value.currentIndices = [];
+    sortingState.value.swappedIndices = [];
+    sortingState.value.leftSubarray = [];
+    sortingState.value.rightSubarray = [];
+    sortingState.value.mergingRange = null;
+    sortingState.value.pivotIndex = -1;
+    sortingState.value.partitionRange = null;
+    sortingState.value.leftPartition = [];
+    sortingState.value.rightPartition = [];
+    
+    const arr = [...arrayData.value];
+    
+    const partition = async (low: number, high: number): Promise<number> => {
+        if (!sortingState.value.isSorting) return low;
+        
+        // Choose last element as pivot
+        const pivot = arr[high];
+        sortingState.value.pivotIndex = high;
+        sortingState.value.partitionRange = { left: low, right: high };
+        
+        const currentBPM = arpeggiatorPanel.value?.getCurrentBPM() || 75;
+        const sixteenthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '16n');
+        const eighthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '8n');
+        const quarterNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '4n');
+        
+        // Play a distinctive sound for pivot selection
+        arpeggiatorPanel.value?.playBell();
+        await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
+        arpeggiatorPanel.value?.playNoteForValue(pivot);
+        await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+        
+        let i = low - 1; // Index of smaller element
+        
+        for (let j = low; j < high; j++) {
+            if (!sortingState.value.isSorting) return low;
+            
+            // Highlight current comparison
+            sortingState.value.currentIndices = [j, high];
+            
+            // Update partition visualization
+            sortingState.value.leftPartition = [];
+            sortingState.value.rightPartition = [];
+            
+            for (let k = low; k <= i; k++) {
+                sortingState.value.leftPartition.push(k);
+            }
+            for (let k = i + 1; k < j; k++) {
+                sortingState.value.rightPartition.push(k);
+            }
+            
+            // Play comparison sound (one sound per beat like bubble sort)
+            arpeggiatorPanel.value?.playComparisonSound();
+            await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
+            
+            // Play single note for comparison
+            arpeggiatorPanel.value?.playNoteForValue(arr[j]);
+            await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+            
+            if (arr[j] < pivot) {
+                i++;
+                
+                if (i !== j) {
+                    // Swap elements
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                    arrayData.value = [...arr];
+                    sortingState.value.swappedIndices = [i, j];
+                    
+                    // Play swap sound
+                    arpeggiatorPanel.value?.playSwapSound();
+                    await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
+                    
+                    // Play single note for swap result
+                    arpeggiatorPanel.value?.playNoteForValue(arr[i]);
+                    await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+                }
+                
+                // Update left partition
+                sortingState.value.leftPartition.push(i);
+            } else {
+                // Update right partition  
+                sortingState.value.rightPartition.push(j);
+            }
+        }
+        
+        // Place pivot in correct position
+        [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+        arrayData.value = [...arr];
+        sortingState.value.swappedIndices = [i + 1, high];
+        sortingState.value.pivotIndex = i + 1;
+        
+        // Play special sound for pivot placement
+        arpeggiatorPanel.value?.playSwapSound();
+        await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
+        arpeggiatorPanel.value?.playBell();
+        await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
+        arpeggiatorPanel.value?.playNoteForValue(arr[i + 1]);
+        await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+        
+        // Mark pivot as sorted
+        sortingState.value.sortedIndices.push(i + 1);
+        
+        // Clear partition visualization
+        sortingState.value.leftPartition = [];
+        sortingState.value.rightPartition = [];
+        sortingState.value.partitionRange = null;
+        sortingState.value.currentIndices = [];
+        sortingState.value.swappedIndices = [];
+        
+        return i + 1;
+    };
+    
+    const quickSortRecursive = async (low: number, high: number) => {
+        if (!sortingState.value.isSorting || low >= high) return;
+        
+        // Highlight current range being sorted
+        sortingState.value.partitionRange = { left: low, right: high };
+        
+        const currentBPM = arpeggiatorPanel.value?.getCurrentBPM() || 75;
+        const eighthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '8n');
+        const quarterNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '4n');
+        
+        // Play single note to indicate range start
+        arpeggiatorPanel.value?.playNoteForValue(arr[low]);
+        await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+        
+        await new Promise(resolve => setTimeout(resolve, quarterNoteMs));
+        
+        const pivotIndex = await partition(low, high);
+        
+        if (!sortingState.value.isSorting) return;
+        
+        // Recursively sort left and right partitions
+        await quickSortRecursive(low, pivotIndex - 1);
+        await quickSortRecursive(pivotIndex + 1, high);
+        
+        // Mark range as sorted if it's a leaf
+        if (low === high) {
+            sortingState.value.sortedIndices.push(low);
+        }
+    };
+    
+    await quickSortRecursive(0, arr.length - 1);
+    
+    // Mark all elements as sorted
+    for (let i = 0; i < arr.length; i++) {
+        if (!sortingState.value.sortedIndices.includes(i)) {
+            sortingState.value.sortedIndices.push(i);
+        }
+    }
+    
+    // Final cleanup
+    sortingState.value.currentIndices = [];
+    sortingState.value.swappedIndices = [];
+    sortingState.value.leftPartition = [];
+    sortingState.value.rightPartition = [];
+    sortingState.value.partitionRange = null;
+    sortingState.value.pivotIndex = -1;
+    sortingState.value.isSorting = false;
+};
+
 // Start sorting when play button is clicked
 const startSorting = () => {
     if (!sortingState.value.isSorting) {
-        bubbleSortWithSound();
+        console.log('Starting algorithm:', algorithm.value);
+        switch (algorithm.value) {
+            case 'mergeSort':
+                console.log('Calling merge sort');
+                mergeSortWithSound();
+                break;
+            case 'quickSort':
+                console.log('Calling quick sort');
+                quickSortWithSound();
+                break;
+            case 'bubbleSort':
+            default:
+                console.log('Calling bubble sort');
+                bubbleSortWithSound();
+                break;
+        }
     }
 };
 
