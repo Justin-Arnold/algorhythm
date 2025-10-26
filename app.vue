@@ -35,7 +35,7 @@
     <main class="flex-1 flex flex-col md:flex-row overflow-hidden p-4 space-x-4">
       <ArpeggiatorPanel 
         ref="arpeggiatorPanel" 
-        :data="arrayData" 
+        :data="dataToBeSorted" 
         :is-sorting="sortingState.isSorting" 
         @start-sorting="startSorting"
         @stop-sorting="stopSorting"
@@ -51,7 +51,7 @@
               <!-- Visualization of the algorithm -->
               <div class="flex h-full items-end justify-around p-4">
                 <div 
-                  v-for="(value, index) in arrayData" 
+                  v-for="(value, index) in dataToBeSorted" 
                   :key="index"
                   class="w-2 md:w-4 rounded-t transition-all duration-300"
                   :style="{ 
@@ -170,8 +170,7 @@ const editorTab = ref('algorithm');
 const visualizationCanvas = ref(null);
 const arpeggiatorPanel = ref(null);
 
-// Sample array data
-const arrayData = ref([]);
+const dataToBeSorted = ref([]);
 
 // Sorting state
 const sortingState = ref({
@@ -268,7 +267,7 @@ const algorithmInfo = computed(() => {
 
 // Generate random data
 const regenerateData = () => {
-  arrayData.value = Array.from({ length: dataSize.value }, () => 
+  dataToBeSorted.value = Array.from({ length: dataSize.value }, () => 
     Math.floor(Math.random() * 100) + 1
   );
   isPlaying.value = false;
@@ -330,7 +329,7 @@ const bubbleSortWithSound = async () => {
     sortingState.value.partitionRange = null;
     sortingState.value.leftPartition = [];
     sortingState.value.rightPartition = [];
-    const arr = [...arrayData.value];
+    const arr = [...dataToBeSorted.value];
     const n = arr.length;
     
     for (let i = 0; i < n - 1; i++) {
@@ -345,8 +344,15 @@ const bubbleSortWithSound = async () => {
             const sixteenthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '16n');
             const eighthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '8n');
             
-            // Play comparison sound
-            arpeggiatorPanel.value?.playBaseSound();
+            // play base sound every 4th note
+            if (j % 2 === 0) {
+                arpeggiatorPanel.value?.playBaseSound();
+                arpeggiatorPanel.value?.playAccentSound();
+            }
+            if (j % 2 === 1) {
+                arpeggiatorPanel.value?.playAccentSound();
+            }
+            // arpeggiatorPanel.value?.playBaseSound();
             await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
             
             // Play sound for both values being compared
@@ -358,11 +364,9 @@ const bubbleSortWithSound = async () => {
             if (arr[j] > arr[j + 1]) {
                 // Swap and highlight
                 [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
-                arrayData.value = [...arr];
+                dataToBeSorted.value = [...arr];
                 sortingState.value.swappedIndices = [j, j + 1];
                 
-                // Play swap sound
-                arpeggiatorPanel.value?.playAccentSound();
                 
                 // Play a chord for the swap
                 arpeggiatorPanel.value?.playNoteForValue(arr[j]);
@@ -386,7 +390,6 @@ const bubbleSortWithSound = async () => {
 const mergeSortWithSound = async () => {
     if (sortingState.value.isSorting) return;
     
-    console.log('Merge sort starting with array:', arrayData.value);
     sortingState.value.isSorting = true;
     sortingState.value.sortedIndices = [];
     sortingState.value.currentIndices = [];
@@ -395,7 +398,7 @@ const mergeSortWithSound = async () => {
     sortingState.value.rightSubarray = [];
     sortingState.value.mergingRange = null;
     
-    const arr = [...arrayData.value];
+    const arr = [...dataToBeSorted.value];
     
     const merge = async (left: number, mid: number, right: number) => {
         if (!sortingState.value.isSorting) return;
@@ -447,7 +450,7 @@ const mergeSortWithSound = async () => {
             }
             
             // Update visualization
-            arrayData.value = [...arr];
+            dataToBeSorted.value = [...arr];
             sortingState.value.swappedIndices = [k];
             
             // Play note for merged element (final sound of this beat)
@@ -461,7 +464,7 @@ const mergeSortWithSound = async () => {
         while (i < leftArr.length) {
             if (!sortingState.value.isSorting) return;
             arr[k] = leftArr[i];
-            arrayData.value = [...arr];
+            dataToBeSorted.value = [...arr];
             sortingState.value.swappedIndices = [k];
             sortingState.value.currentIndices = [left + i];
             arpeggiatorPanel.value?.playNoteForValue(arr[k]);
@@ -474,7 +477,7 @@ const mergeSortWithSound = async () => {
         while (j < rightArr.length) {
             if (!sortingState.value.isSorting) return;
             arr[k] = rightArr[j];
-            arrayData.value = [...arr];
+            dataToBeSorted.value = [...arr];
             sortingState.value.swappedIndices = [k];
             sortingState.value.currentIndices = [mid + 1 + j];
             arpeggiatorPanel.value?.playNoteForValue(arr[k]);
@@ -558,7 +561,7 @@ const quickSortWithSound = async () => {
     sortingState.value.leftPartition = [];
     sortingState.value.rightPartition = [];
     
-    const arr = [...arrayData.value];
+    const arr = [...dataToBeSorted.value];
     
     const partition = async (low: number, high: number): Promise<number> => {
         if (!sortingState.value.isSorting) return low;
@@ -612,7 +615,7 @@ const quickSortWithSound = async () => {
                 if (i !== j) {
                     // Swap elements
                     [arr[i], arr[j]] = [arr[j], arr[i]];
-                    arrayData.value = [...arr];
+                    dataToBeSorted.value = [...arr];
                     sortingState.value.swappedIndices = [i, j];
                     
                     // Play swap sound
@@ -634,7 +637,7 @@ const quickSortWithSound = async () => {
         
         // Place pivot in correct position
         [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
-        arrayData.value = [...arr];
+        dataToBeSorted.value = [...arr];
         sortingState.value.swappedIndices = [i + 1, high];
         sortingState.value.pivotIndex = i + 1;
         
