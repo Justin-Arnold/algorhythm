@@ -1,35 +1,7 @@
-<!-- AlgoRhythmApp.vue -->
 <template>
   <div class="flex flex-col h-screen bg-gray-900 text-white">
     <!-- Header -->
-    <header class="p-4 bg-base-100">
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-primary">AlgoRhythm</h1>
-        <nav class="flex">
-          <button 
-            class="px-4 py-2 rounded-l-md"
-            :class="activeTab === 'explore' ? 'bg-indigo-700' : 'bg-gray-700'"
-            @click="activeTab = 'explore'"
-          >
-            Explore
-          </button>
-          <button 
-            class="px-4 py-2"
-            :class="activeTab === 'learn' ? 'bg-indigo-700' : 'bg-gray-700'"
-            @click="activeTab = 'learn'"
-          >
-            Learn
-          </button>
-          <button 
-            class="px-4 py-2 rounded-r-md"
-            :class="activeTab === 'create' ? 'bg-indigo-700' : 'bg-gray-700'"
-            @click="activeTab = 'create'"
-          >
-            Create
-          </button>
-        </nav>
-      </div>
-    </header>
+    <AppHeader></AppHeader>
     
     <!-- Main Content -->
     <main class="flex-1 flex flex-col md:flex-row overflow-hidden p-4 space-x-4">
@@ -164,7 +136,7 @@ import ArpeggioPlayer from '~/utils/arpeggiator/ArpeggioPlayer';
 // State variables
 const isPlaying = ref(false);
 const algorithm = ref('bubbleSort');
-const activeTab = ref('explore');
+
 const dataSize = ref(20);
 const editorTab = ref('algorithm');
 const visualizationCanvas = ref(null);
@@ -345,7 +317,7 @@ const bubbleSortWithSound = async () => {
             const eighthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '8n');
             
             // play base sound every 4th note
-            if (j % 2 === 0) {
+            if (j % 4 === 0) {
                 arpeggiatorPanel.value?.playBaseSound();
                 arpeggiatorPanel.value?.playAccentSound();
             }
@@ -369,10 +341,10 @@ const bubbleSortWithSound = async () => {
                 
                 
                 // Play a chord for the swap
-                arpeggiatorPanel.value?.playNoteForValue(arr[j]);
-                setTimeout(() => arpeggiatorPanel.value?.playNoteForValue(arr[j + 1]), sixteenthNoteMs);
+                // arpeggiatorPanel.value?.playNoteForValue(arr[j]);
+                // setTimeout(() => arpeggiatorPanel.value?.playNoteForValue(arr[j + 1]), sixteenthNoteMs);
                 
-                await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
+                // await new Promise(resolve => setTimeout(resolve, eighthNoteMs));
             }
         }
         // Mark as sorted
