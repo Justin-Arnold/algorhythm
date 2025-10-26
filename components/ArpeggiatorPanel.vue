@@ -66,8 +66,8 @@ const getCurrentBPM = () => {
     return player?.getCurrentBPM() || 75;
 };
 
-const playComparisonSound = () => {
-    switch (comparisonSound.value) {
+const playBaseSound = () => {
+    switch (baseSound.value) {
         case 'kick': playKickDrum(); break;
         case 'hihat': playHiHat(); break;
         case 'snare': playSnare(); break;
@@ -76,8 +76,8 @@ const playComparisonSound = () => {
     }
 };
 
-const playSwapSound = () => {
-    switch (swapSound.value) {
+const playAccentSound = () => {
+    switch (accentSound.value) {
         case 'kick': playKickDrum(); break;
         case 'hihat': playHiHat(); break;
         case 'snare': playSnare(); break;
@@ -85,8 +85,8 @@ const playSwapSound = () => {
         case 'none': break;
     }
 };
-const comparisonSound = ref<'none' | 'kick' | 'hihat' | 'snare' | 'bell'>('kick');
-const swapSound = ref<'none' | 'kick' | 'hihat' | 'snare' | 'bell'>('hihat');
+const baseSound = ref<'none' | 'kick' | 'hihat' | 'snare' | 'bell'>('kick');
+const accentSound = ref<'none' | 'kick' | 'hihat' | 'snare' | 'bell'>('hihat');
 const algorithm = ref('bubbleSort');
 
 // Make methods available to parent component
@@ -96,11 +96,11 @@ defineExpose({
     playHiHat,
     playSnare,
     playBell,
-    playComparisonSound,
-    playSwapSound,
+    playBaseSound,
+    playAccentSound,
     getCurrentBPM,
-    comparisonSound,
-    swapSound,
+    baseSound,
+    accentSound,
     algorithm,
     player
 });
@@ -210,8 +210,8 @@ function toggleSorting() {
             <input type="range" min="60" max="160" v-model="beatsPerMinute" class="range range-primary" />
         </div>
         <div class="mb-6">
-            <label class="label mb-2">Comparison Sound</label>
-            <select v-model="comparisonSound" class="select select-primary">
+            <label class="label mb-2">Base Sound</label>
+            <select v-model="baseSound" class="select select-primary">
                 <option value="none">None</option>
                 <option value="kick">Kick Drum</option>
                 <option value="hihat">Hi-Hat</option>
@@ -220,8 +220,8 @@ function toggleSorting() {
             </select>
         </div>
         <div class="mb-6">
-            <label class="label mb-2">Swap Sound</label>
-            <select v-model="swapSound" class="select select-primary">
+            <label class="label mb-2">Accent Sound</label>
+            <select v-model="accentSound" class="select select-primary">
                 <option value="none">None</option>
                 <option value="kick">Kick Drum</option>
                 <option value="hihat">Hi-Hat</option>

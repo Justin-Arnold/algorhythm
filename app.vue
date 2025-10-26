@@ -346,7 +346,7 @@ const bubbleSortWithSound = async () => {
             const eighthNoteMs = ArpeggioPlayer.bpmToMsForNote(currentBPM, '8n');
             
             // Play comparison sound
-            arpeggiatorPanel.value?.playComparisonSound();
+            arpeggiatorPanel.value?.playBaseSound();
             await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
             
             // Play sound for both values being compared
@@ -362,7 +362,7 @@ const bubbleSortWithSound = async () => {
                 sortingState.value.swappedIndices = [j, j + 1];
                 
                 // Play swap sound
-                arpeggiatorPanel.value?.playSwapSound();
+                arpeggiatorPanel.value?.playAccentSound();
                 
                 // Play a chord for the swap
                 arpeggiatorPanel.value?.playNoteForValue(arr[j]);
@@ -428,7 +428,7 @@ const mergeSortWithSound = async () => {
             sortingState.value.currentIndices = [left + i, mid + 1 + j];
             
             // Play comparison sound (one sound per beat like bubble sort)
-            arpeggiatorPanel.value?.playComparisonSound();
+            arpeggiatorPanel.value?.playBaseSound();
             await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
             
             // Play one note for the comparison
@@ -442,7 +442,7 @@ const mergeSortWithSound = async () => {
                 arr[k] = rightArr[j];
                 j++;
                 // Play swap sound for merge operation
-                arpeggiatorPanel.value?.playSwapSound();
+                arpeggiatorPanel.value?.playAccentSound();
                 await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
             }
             
@@ -599,7 +599,7 @@ const quickSortWithSound = async () => {
             }
             
             // Play comparison sound (one sound per beat like bubble sort)
-            arpeggiatorPanel.value?.playComparisonSound();
+            arpeggiatorPanel.value?.playBaseSound();
             await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
             
             // Play single note for comparison
@@ -616,7 +616,7 @@ const quickSortWithSound = async () => {
                     sortingState.value.swappedIndices = [i, j];
                     
                     // Play swap sound
-                    arpeggiatorPanel.value?.playSwapSound();
+                    arpeggiatorPanel.value?.playAccentSound();
                     await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
                     
                     // Play single note for swap result
@@ -639,7 +639,7 @@ const quickSortWithSound = async () => {
         sortingState.value.pivotIndex = i + 1;
         
         // Play special sound for pivot placement
-        arpeggiatorPanel.value?.playSwapSound();
+        arpeggiatorPanel.value?.playAccentSound();
         await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
         arpeggiatorPanel.value?.playBell();
         await new Promise(resolve => setTimeout(resolve, sixteenthNoteMs));
