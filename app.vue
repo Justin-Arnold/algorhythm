@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-screen bg-gray-900 text-white">
     <!-- Header -->
-    <AppHeader></AppHeader>
+    <AppHeader />
     
     <!-- Main Content -->
     <main class="flex-1 flex flex-col md:flex-row overflow-hidden p-4 space-x-4">
@@ -13,107 +13,12 @@
         @stop-sorting="stopSorting"
         @algorithm-changed="(newAlgorithm) => algorithm = newAlgorithm"
       />
-      <!-- Main Visualization Area -->
-      <div class="flex-1 overflow-hidden flex flex-col">
-        <!-- Visualization Canvas -->
-        <div class="flex-1 bg-base-100 rounded-box p-4 overflow-hidden flex justify-center items-center relative">
-          <!-- Canvas for visualization -->
-          <div ref="visualizationCanvas" class="absolute inset-0">
-            <div class="w-full h-full">
-              <!-- Visualization of the algorithm -->
-              <div class="flex h-full items-end justify-around p-4">
-                <div 
-                  v-for="(value, index) in dataToBeSorted" 
-                  :key="index"
-                  class="w-2 md:w-4 rounded-t transition-all duration-300"
-                  :style="{ 
-                    height: `${value}%`,
-                    backgroundColor: getBarColor(index, value)
-                  }"
-                ></div>
-              </div>
-            </div>
-          </div>
-          
-          <div v-if="activeTab === 'create'" class="absolute top-4 right-4 flex">
-            <button class="bg-indigo-600 p-2 rounded-full shadow-lg mr-2">
-              <!-- <IconSave :size="20" /> -->
-            </button>
-            <button class="bg-pink-600 p-2 rounded-full shadow-lg">
-              <!-- <IconMusic :size="20" /> -->
-            </button>
-          </div>
-        </div>
-        
-        <!-- Create Mode Interface -->
-        <div v-if="activeTab === 'create'" class="h-64 bg-gray-800 rounded-lg p-4 overflow-hidden">
-          <div class="flex mb-2">
-            <button 
-              class="bg-gray-700 px-4 py-2 rounded-l-md flex items-center text-sm font-medium"
-              :class="{'bg-gray-600': editorTab === 'algorithm'}"
-              @click="editorTab = 'algorithm'"
-            >
-              <!-- <IconCode class="mr-2" :size="16" /> -->
-              Algorithm
-            </button>
-            <button 
-              class="bg-gray-700 px-4 py-2 rounded-r-md flex items-center text-sm font-medium"
-              :class="{'bg-gray-600': editorTab === 'sound'}"
-              @click="editorTab = 'sound'"
-            >
-              <!-- <IconMusic class="mr-2" :size="16" /> -->
-              Sound Mapping
-            </button>
-          </div>
-          
-          <div class="bg-gray-900 h-full rounded p-2 font-mono text-sm overflow-auto">
-            <pre v-if="editorTab === 'algorithm'" class="text-green-400">{{ algorithmCode }}</pre>
-            <div v-else-if="editorTab === 'sound'" class="p-2">
-              <div v-for="(operation, index) in soundOperations" :key="index" class="mb-3">
-                <div class="text-indigo-300 mb-1">{{ operation.name }}:</div>
-                <div class="flex items-center">
-                  <select 
-                    v-model="operation.instrument" 
-                    class="bg-gray-800 border border-gray-700 rounded p-1 mr-2 text-sm"
-                  >
-                    <option value="synth">Synth</option>
-                    <option value="fm">FM Synth</option>
-                    <option value="am">AM Synth</option>
-                    <option value="membrane">Percussion</option>
-                    <option value="metal">Metallic</option>
-                  </select>
-                  <input 
-                    type="range" 
-                    min="0.1" 
-                    max="1.0" 
-                    step="0.1" 
-                    v-model.number="operation.volume" 
-                    class="w-24 mx-2"
-                  />
-                  <span class="text-xs">{{ operation.volume.toFixed(1) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Learn Mode Interface -->
-        <div v-if="activeTab === 'learn'" class="h-64 bg-gray-800 rounded-lg p-4 overflow-auto">
-          <h2 class="text-xl font-bold mb-2">{{ algorithmInfo.name }}</h2>
-          <p class="mb-2">{{ algorithmInfo.description }}</p>
-          <h3 class="text-lg font-semibold mb-1">Sonification Approach</h3>
-          <p class="mb-2">In our sonification:</p>
-          <ul class="list-disc pl-5 mb-2">
-            <li v-for="(sound, index) in algorithmInfo.sounds" :key="index">
-              {{ sound }}
-            </li>
-          </ul>
-          <p>
-            Time Complexity: {{ algorithmInfo.timeComplexity }} - 
-            Space Complexity: {{ algorithmInfo.spaceComplexity }}
-          </p>
-        </div>
-      </div>
+      <AppSortingVisualizer 
+        ref="visualizationCanvas" 
+        :data-to-be-sorted="dataToBeSorted" 
+        :sorting-state="sortingState"
+        :get-bar-color="getBarColor"
+      />
     </main>
   </div>
 </template>
@@ -122,16 +27,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import ArpeggiatorPanel from '~/components/ArpeggiatorPanel.vue';
 import ArpeggioPlayer from '~/utils/arpeggiator/ArpeggioPlayer';
-
-// import { 
-//   Play as IconPlay, 
-//   Pause as IconPause, 
-//   RefreshCw as IconRefreshCw,
-//   Settings as IconSettings,
-//   Code as IconCode,
-//   Music as IconMusic,
-//   Save as IconSave
-// } from 'lucide-vue-next';
+import type { SortingState } from '~/components/AppSortingVisualizer.vue';
 
 // State variables
 const isPlaying = ref(false);
@@ -143,99 +39,20 @@ const visualizationCanvas = ref(null);
 const arpeggiatorPanel = ref(null);
 
 const dataToBeSorted = ref([]);
-
-// Sorting state
-const sortingState = ref({
+const sortingState = ref<SortingState>({
     isSorting: false,
-    currentIndices: [] as number[],
-    swappedIndices: [] as number[],
-    sortedIndices: [] as number[],
-    leftSubarray: [] as number[],
-    rightSubarray: [] as number[],
-    mergingRange: null as { left: number, right: number } | null,
+    currentIndices: [],
+    swappedIndices: [],
+    sortedIndices: [],
+    leftSubarray: [],
+    rightSubarray: [],
+    mergingRange: null,
     pivotIndex: -1,
-    partitionRange: null as { left: number, right: number } | null,
-    leftPartition: [] as number[],
-    rightPartition: [] as number[]
+    partitionRange: null,
+    leftPartition: [],
+    rightPartition: [],
 });
 
-// Algorithm code for editor
-const algorithmCode = ref(`// Example of a custom algorithm
-function customAlgorithm(array) {
-  const steps = [];
-  
-  // Your algorithm here
-  for (let i = 0; i < array.length; i++) {
-    // Add comparison steps
-    steps.push({
-      type: 'comparison',
-      elements: [array[i]],
-      indices: [i]
-    });
-    
-    // Add custom musical events
-    if (i % 3 === 0) {
-      steps.push({
-        type: 'custom',
-        elements: [array[i]],
-        indices: [i],
-        metadata: { note: 'C', octave: 4 }
-      });
-    }
-  }
-  
-  return steps;
-}`);
-
-// Sound operations for the sound mapping editor
-const soundOperations = ref([
-  { name: 'Comparison', instrument: 'synth', volume: 0.7 },
-  { name: 'Swap', instrument: 'membrane', volume: 0.8 },
-  { name: 'Access', instrument: 'fm', volume: 0.5 },
-  { name: 'Custom Event', instrument: 'metal', volume: 0.6 }
-]);
-
-// Algorithm info for learn tab
-const algorithmInfo = computed(() => {
-  const infos = {
-    bubbleSort: {
-      name: 'Bubble Sort',
-      description: 'Bubble Sort is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.',
-      sounds: [
-        'Comparisons are represented by short melodic notes',
-        'Swaps trigger percussion sounds',
-        'The pitch corresponds to the value being examined'
-      ],
-      timeComplexity: 'O(n²)',
-      spaceComplexity: 'O(1)'
-    },
-    mergeSort: {
-      name: 'Merge Sort',
-      description: 'Merge Sort is a divide-and-conquer algorithm that divides the input array into two halves, recursively sorts them, and finally merges the sorted halves.',
-      sounds: [
-        'Dividing the array creates a descending scale',
-        'Merging operations use harmonic sounds that build chords',
-        'The final merge creates a satisfying resolution'
-      ],
-      timeComplexity: 'O(n log n)',
-      spaceComplexity: 'O(n)'
-    },
-    quickSort: {
-      name: 'Quick Sort',
-      description: 'Quick Sort is a divide-and-conquer algorithm that selects a pivot element and partitions the array around it, recursively sorting the sub-arrays.',
-      sounds: [
-        'Pivot selection is marked with a distinctive bell sound',
-        'Partitioning creates ascending scales and rhythmic swaps',
-        'Each correctly placed pivot plays a resolution chord'
-      ],
-      timeComplexity: 'O(n log n) average, O(n²) worst',
-      spaceComplexity: 'O(log n)'
-    },
-    // Add more algorithm information as needed
-  };
-  
-  return infos[algorithm.value] || infos.bubbleSort;
-});
 
 // Generate random data
 const regenerateData = () => {
@@ -249,44 +66,7 @@ watch(dataSize, () => {
   regenerateData();
 });
 
-// Color logic for bars based on sorting state
-const getBarColor = (index: number, value: number) => {
-    if (sortingState.value.sortedIndices.includes(index)) {
-        return '#10b981'; // Green for sorted
-    }
-    if (sortingState.value.pivotIndex === index) {
-        return '#dc2626'; // Dark red for pivot
-    }
-    if (sortingState.value.swappedIndices.includes(index)) {
-        return '#ef4444'; // Red for swapped/merged
-    }
-    if (sortingState.value.currentIndices.includes(index)) {
-        return '#f59e0b'; // Orange for currently comparing
-    }
-    if (sortingState.value.leftPartition.includes(index)) {
-        return '#8b5cf6'; // Purple for left partition (elements < pivot)
-    }
-    if (sortingState.value.rightPartition.includes(index)) {
-        return '#06b6d4'; // Cyan for right partition (elements > pivot)
-    }
-    if (sortingState.value.leftSubarray.includes(index)) {
-        return '#8b5cf6'; // Purple for left subarray (merge sort)
-    }
-    if (sortingState.value.rightSubarray.includes(index)) {
-        return '#06b6d4'; // Cyan for right subarray (merge sort)
-    }
-    if (sortingState.value.mergingRange && 
-        index >= sortingState.value.mergingRange.left && 
-        index <= sortingState.value.mergingRange.right) {
-        return '#fbbf24'; // Yellow for merging range
-    }
-    if (sortingState.value.partitionRange && 
-        index >= sortingState.value.partitionRange.left && 
-        index <= sortingState.value.partitionRange.right) {
-        return '#fbbf24'; // Yellow for current partition range
-    }
-    return '#6366f1'; // Default blue
-};
+
 
 // Bubble sort with sound visualization
 const bubbleSortWithSound = async () => {
